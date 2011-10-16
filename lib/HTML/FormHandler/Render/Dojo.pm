@@ -18,12 +18,15 @@ with 'HTML::FormHandler::Render::Simple' => {
             render_start
             render_end
             render_submit
+
+            html_form_tag
         } ],
         -alias => {
             render_field => '_simple_render_field',
             render_start => '_simple_render_start',
             _alias('render_submit'),
             _alias('render'),
+            _alias('html_form_tag'),
         },
     };
 
@@ -101,7 +104,7 @@ my $_tweak = sub {
     return;
 };
 
-around mark_css_required    => $_tweak;
+around mark_css_required   => $_tweak;
 around mark_dijit_required => $_tweak;
 
 sub _build__required_css { { } }
@@ -169,13 +172,12 @@ sub render_css_block {
     return $self->render_css_open . "$body\n" . $self->render_css_close;
 }
 
+# XXX do we need this method?
 sub render_start {
     my ($self) = @_;
 
     my $output = $self->_simple_render_start;
 
-    $self->mark_dijit_required('dojox.form.Manager');
-    $output =~ s/^<form //;
     return $output;
 }
 
@@ -188,8 +190,8 @@ sub render {
     my $css    = $self->render_css_block;
     my $script = $self->render_script_block;
 
-    #return qq{$script <div dojoType="dijit.form.Form" $output};
-    return qq{$css\n$script\n\n<div dojoType="dojox.form.Manager" $output};
+    #return qq{$css\n$script\n\n<div dojoType="dojox.form.Manager" $output};
+    return qq{$css\n$script\n\n$output};
 }
 
 sub render_end {
@@ -289,6 +291,16 @@ sub render_field_struct {
         $output .= '</fieldset>';
     }
     $output .= "</div>\n";
+    return $output;
+}
+
+sub html_form_tag {
+    my $self = shift @_;
+
+    $self->mark_dijit_required('dojox.form.Manager');
+
+    my $output = $self->_simple_html_form_tag;
+    $output =~ s/^<form /<div dojoType="dojox.form.Manager" /;
     return $output;
 }
 
